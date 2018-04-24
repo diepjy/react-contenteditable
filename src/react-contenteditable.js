@@ -3,13 +3,21 @@ import React from 'react';
 let stripNbsp = str => str.replace(/&nbsp;|\u202F|\u00A0/g, ' ');
 
 export default class ContentEditable extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
+    this.html = '';
+    this.isActive = false;
     this.emitChange = this.emitChange.bind(this);
   }
 
   render() {
-    var { tagName, html, ...props } = this.props;
+    var { tagName, html, placeholder, ...props } = this.props;
+
+    if (placeholder !== undefined && html.trim().length <= 0 && !this.active) {
+      this.html = placeholder;
+    } else {
+      this.html = html;
+    }
 
     return React.createElement(
       tagName || 'div',
@@ -17,9 +25,28 @@ export default class ContentEditable extends React.Component {
         ...props,
         ref: (e) => this.htmlEl = e,
         onInput: this.emitChange,
-        onBlur: this.props.onBlur || this.emitChange,
+        onFocus: (e) => {
+          this.active = true;
+          if (placeholder !== undefined && this.htmlEl.innerHTML === placeholder) {
+            this.html = html;
+            this.htmlEl.innerHTML = '';
+          }
+        },
+        onBlur: (e) => {
+          this.active = false;
+          if (this.htmlEl.innerHTML.length <= 0) {
+            this.htmlEl.innerHTML = placeholder;
+          }
+
+          if (this.props.onBlur) {
+            this.props.onBlur(e);
+          } else {
+            this.emitChange(e);
+          }
+        },
+        // onBlur: this.props.onBlur || this.emitChange,
         contentEditable: !this.props.disabled,
-        dangerouslySetInnerHTML: {__html: html}
+        dangerouslySetInnerHTML: {__html: this.html}
       },
       this.props.children);
   }
