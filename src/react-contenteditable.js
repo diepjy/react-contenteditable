@@ -34,7 +34,7 @@ export default class ContentEditable extends React.Component {
         },
         onBlur: (e) => {
           this.active = false;
-          if (this.htmlEl.innerHTML.length <= 0) {
+          if (placeholder !== undefined && this.htmlEl.innerHTML.length <= 0) {
             this.htmlEl.innerHTML = placeholder;
           }
 
